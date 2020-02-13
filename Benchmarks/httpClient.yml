@@ -1,0 +1,31 @@
+variables:
+  protocol: Http2
+  serverUri: http://10.0.0.102:5010
+  port: 5010
+jobs:
+  httpclient:
+    source:
+      localFolder: /Users/janjahoda/workspace/LibBenchmarks/
+      project: HttpClientBenchmark/HttpClientBenchmark.csproj
+    variables:
+      warmup: 15
+      duration: 15
+    arguments: --serverUri {{serverUri}} --warmup {{warmup}} --duration {{duration}}
+
+  kestrel:
+    source:
+      localFolder: /Users/janjahoda/workspace/LibBenchmarks/
+      project: ServerKestrel/ServerKestrel.csproj
+    readyStateText: Server started.
+    variables:
+      logLevel: None
+      tls: true
+    arguments: --log-level {{logLevel}} --protocol {{protocol}} --port {{port}} -tls {{tls}}
+
+
+scenarios:
+  httpclient:
+    kestrel:
+      job: kestrel
+    client:
+      job: httpclient
