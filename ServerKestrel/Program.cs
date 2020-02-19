@@ -3,7 +3,9 @@
 
 using System;
 using System.IO;
+using System.Net;
 using System.Net.Http;
+using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
@@ -19,14 +21,23 @@ using Microsoft.Extensions.Logging;
 
 namespace ServerKestrel
 {
+    ///
     public class Program
     {
 
-        public static void Main(LogLevel? logLevel, bool tls = false, int port = 5010, HttpProtocols protocol = HttpProtocols.Http1)
+        ///
+        public static void Main(LogLevel? logLevel, bool tls = false, int port = 5010, ProtocolVersion protocol = ProtocolVersion.Http11)
         {
 
             Console.WriteLine($"Protocol: {protocol}");
+            Console.WriteLine($"Protocol: {port}");
+            Console.WriteLine($"Log level: {logLevel}");
+            Console.WriteLine($"TLS: {tls}");
+            Console.WriteLine($"ASPNETCORE_URLS: {Environment.GetEnvironmentVariable("ASPNETCORE_URLS")}");
 
+
+
+            ReportLocalIPAddress();
             var builder = new WebHostBuilder()
                 .ConfigureLogging(loggerFactory =>
                 {
@@ -41,7 +52,16 @@ namespace ServerKestrel
                 {
                     options.ListenAnyIP(port, listenOptions =>
                     {
-                        listenOptions.Protocols = protocol;
+                        listenOptions.Protocols = protocol switch
+                        {
+                            ProtocolVersion.Http10 => HttpProtocols.Http1,
+                            ProtocolVersion.Http11 => HttpProtocols.Http1,
+                            ProtocolVersion.Http20 => HttpProtocols.Http2,
+#if NETCOREAPP5_0
+                            ProtocolVersion.Http30 => HttpProtocols.Http3,
+#endif
+                            _ => throw new ArgumentException($"Unknown protocol {protocol}")
+                        };
                         if (tls)
                         {
                             using RSA rsa = RSA.Create();
@@ -79,6 +99,16 @@ namespace ServerKestrel
             {
                 await context.Response.WriteAsync("ok");
             });
+        }
+
+        private static void ReportLocalIPAddress()
+        {
+            var host = Dns.GetHostEntry(Dns.GetHostName());
+            foreach (var ip in host.AddressList)
+            {
+                Console.WriteLine(ip);
+            }
+
         }
     }
 }

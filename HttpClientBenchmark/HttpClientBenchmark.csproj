@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -11,14 +11,32 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
-  <ItemGroup Condition="$(TargetFramework) == 'netcoreapp3.0' or $(TargetFramework) == 'netcoreapp5.0'">
-    <FrameworkReference Update="Microsoft.NETCore.App" RuntimeFrameworkVersion="$(MicrosoftNETCoreAppPackageVersion)" />
+  <Choose>
+    <When Condition="'$(TargetFramework)' == 'netcoreapp3.0' or '$(TargetFramework)' == 'netcoreapp5.0'">
+      <ItemGroup>
+        <FrameworkReference Update="Microsoft.AspNetCore.App" RuntimeFrameworkVersion="$(MicrosoftAspNetCoreAppPackageVersion)" />
+        <FrameworkReference Update="Microsoft.NETCore.App" RuntimeFrameworkVersion="$(MicrosoftNETCoreAppPackageVersion)" />
+      </ItemGroup>
+    </When>
+    <Otherwise>
+      <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.App">
+          <Version Condition="($(BenchmarksAspNetCoreVersion) != '')">$(BenchmarksAspNetCoreVersion)</Version>
+        </PackageReference>
+      </ItemGroup>
+    </Otherwise>
+  </Choose>
+
+  <ItemGroup>
     <PackageReference Include="System.CommandLine.DragonFruit" Version="0.3.0-alpha.20104.2" />
   </ItemGroup>
 
   <ItemGroup>
     <Compile Include="..\Common\BenchmarksEventSource.cs">
       <Link>Common\BenchmarksEventSource.cs</Link>
+    </Compile>
+    <Compile Include="..\Common\ProtocolVersion.cs">
+      <Link>Common\ProtocolVersion.cs</Link>
     </Compile>
   </ItemGroup>
 

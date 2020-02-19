@@ -1,16 +1,18 @@
 variables:
-  protocol: Http2
-  serverUri: http://10.0.0.102:5010
-  port: 5010
+  protocol: Http10
+  serverUri: http://10.0.0.110:5000
+  port: 5000
 jobs:
   httpclient:
     source:
       localFolder: /Users/janjahoda/workspace/LibBenchmarks/
       project: HttpClientBenchmark/HttpClientBenchmark.csproj
+    isConsoleApp: true
+    waitForExit: true
     variables:
       warmup: 15
       duration: 15
-    arguments: --serverUri {{serverUri}} --warmup {{warmup}} --duration {{duration}}
+    arguments: --server-uri {{serverUri}} --protocol {{protocol}} --warmup {{warmup}} --duration {{duration}}
 
   kestrel:
     source:
@@ -19,8 +21,7 @@ jobs:
     readyStateText: Server started.
     variables:
       logLevel: None
-      tls: true
-    arguments: --log-level {{logLevel}} --protocol {{protocol}} --port {{port}} -tls {{tls}}
+    arguments: --log-level {{logLevel}} --protocol {{protocol}} --port {{port}} --tls {% if serverUri contains "https://" %}true{% else %}false{% endif %}
 
 
 scenarios:
